@@ -1,0 +1,109 @@
+# Python cache
+
+**pycache**/
+*.py[cod]
+*$py.class
+
+# C extensions
+
+*.so
+
+# Distribution / packaging
+
+build/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+
+venv/
+.env/
+.envrc
+.venv/
+env/
+ENV/
+
+# Environment variables
+
+.env
+.env.*
+
+# Logs
+
+*.log
+
+# Unit test / coverage
+
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+pytest_cache/
+
+# Jupyter Notebook
+
+.ipynb_checkpoints
+
+# PyCharm
+
+.idea/
+
+# VSCode
+
+.vscode/
+
+# MacOS
+
+.DS_Store
+
+# Windows
+
+Thumbs.db
+desktop.ini
+
+# MyPy
+
+.mypy_cache/
+
+# Pyre
+
+.pyre/
+
+# Ruff
+
+.ruff_cache/
+
+# Pytype
+
+.pytype/
+
+# Django
+
+*.sqlite3
+media/
+staticfiles/
+
+# ML / Data files
+
+data/
+datasets/
+models/
+checkpoints/
+
+# Temporary files
+
+*.tmp
+*.temp
