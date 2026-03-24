@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Medical AI - Upload</title>
+  <style>
+    :root {
+      --bg: #f2f7f5;
+      --surface: #ffffff;
+      --ink: #112a22;
+      --muted: #4f6b62;
+      --accent: #0d8a66;
+      --accent-2: #1f6ed4;
+      --border: #d8e5df;
+      --ok: #18794e;
+      --error: #be123c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", "Noto Sans", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 10%, #dff4ea 0%, transparent 45%),
+        radial-gradient(circle at 90% 90%, #dae8ff 0%, transparent 50%),
+        var(--bg);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: min(760px, 100%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 20px 40px rgba(13, 34, 28, 0.08);
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 28px;
+      background: linear-gradient(135deg, #e5f6ef, #e9f0ff);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 1.35rem;
+    }
+
+    .header p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .body {
+      display: grid;
+      gap: 16px;
+      padding: 24px;
+    }
+
+    .dropzone {
+      border: 2px dashed #9bc9ba;
+      border-radius: 14px;
+      background: #f7fcfa;
+      padding: 20px;
+      display: grid;
+      gap: 12px;
+      justify-items: start;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+    .primary { background: var(--accent); color: #fff; }
+    .secondary { background: #e9f0ff; color: #163970; }
+
+    .status {
+      min-height: 24px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .status.ok { color: var(--ok); }
+    .status.error { color: var(--error); }
+
+    .result {
+      background: #f8fbff;
+      border: 1px solid #dbe6fb;
+      border-radius: 12px;
+      padding: 14px;
+      display: none;
+      gap: 8px;
+    }
+
+    .preview {
+      width: min(100%, 320px);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      display: none;
+    }
+
+    .seg-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .seg-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .seg-card h3 {
+      margin: 0 0 8px;
+      font-size: 0.95rem;
+      color: #1e3a34;
+    }
+
+    .seg-img {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      display: block;
+    }
+
+    .mono {
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 0.92rem;
+      color: #203a6f;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <section class="header">
+      <h1>Inferencia de Imagem - Medical AI</h1>
+      <p>Selecione uma imagem, envie para o backend FastAPI e veja o valor previsto pelo modelo.</p>
+    </section>
+
+    <section class="body">
+      <div class="dropzone">
+        <input id="fileInput" type="file" accept="image/*" />
+        <div class="row">
+          <button id="sendBtn" class="primary" type="button">Enviar Imagem</button>
+          <button id="checkBtn" class="secondary" type="button">Checar /health</button>
+        </div>
+      </div>
+
+      <img id="preview" class="preview" alt="Preview da imagem" />
+      <div id="status" class="status"></div>
+
+      <div id="result" class="result">
+        <strong>Resultado</strong>
+        <div id="resultText" class="mono"></div>
+        <div class="seg-grid">
+          <div class="seg-card">
+            <h3>Mascara</h3>
+            <img id="maskImg" class="seg-img" alt="Mascara de segmentacao" />
+          </div>
+          <div class="seg-card">
+            <h3>Overlay</h3>
+            <img id="overlayImg" class="seg-img" alt="Overlay da segmentacao" />
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const checkBtn = document.getElementById("checkBtn");
+    const statusBox = document.getElementById("status");
+    const resultBox = document.getElementById("result");
+    const resultText = document.getElementById("resultText");
+    const preview = document.getElementById("preview");
+    const maskImg = document.getElementById("maskImg");
+    const overlayImg = document.getElementById("overlayImg");
+
+    function setStatus(message, kind = "") {
+      statusBox.textContent = message;
+      statusBox.className = `status ${kind}`.trim();
+    }
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files?.[0];
+      resultBox.style.display = "none";
+      maskImg.removeAttribute("src");
+      overlayImg.removeAttribute("src");
+      if (!file) {
+        preview.style.display = "none";
+        preview.src = "";
+        return;
+      }
+
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = "block";
+      setStatus("Arquivo selecionado: " + file.name);
+    });
+
+    checkBtn.addEventListener("click", async () => {
+      setStatus("Consultando /health...");
+      try {
+        const response = await fetch("/health");
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(JSON.stringify(data));
+        }
+        setStatus(`Backend OK | model.ready: ${data.model.ready}`, "ok");
+      } catch (error) {
+        setStatus("Erro no /health: " + error.message, "error");
+      }
+    });
+
+    sendBtn.addEventListener("click", async () => {
+      const file = fileInput.files?.[0];
+      if (!file) {
+        setStatus("Escolha uma imagem antes de enviar.", "error");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      sendBtn.disabled = true;
+      setStatus("Enviando imagem para /predict...");
+
+      try {
+        const response = await fetch("/predict", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          const detail = data.detail || JSON.stringify(data);
+          throw new Error(detail);
+        }
+
+        if (!data.mask_base64 || !data.overlay_base64) {
+          throw new Error("Resposta sem mascara/overlay de segmentacao.");
+        }
+
+        maskImg.src = `data:image/png;base64,${data.mask_base64}`;
+        overlayImg.src = `data:image/png;base64,${data.overlay_base64}`;
+
+        const summary = {
+          filename: data.filename,
+          mask_mean: data.mask_mean,
+          mask_coverage: data.mask_coverage,
+          width: data.width,
+          height: data.height,
+        };
+        resultText.textContent = JSON.stringify(summary, null, 2);
+        resultBox.style.display = "grid";
+        setStatus("Segmentacao concluida com sucesso.", "ok");
+      } catch (error) {
+        setStatus("Falha na segmentacao: " + error.message, "error");
+      } finally {
+        sendBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
