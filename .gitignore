@@ -100,10 +100,21 @@ staticfiles/
 
 data/
 datasets/
-models/
+/models/
 checkpoints/
+
+# Keep backend model code tracked, ignore common weight artifacts
+backend/models/**/*.pt
+backend/models/**/*.pth
+backend/models/**/*.h5
+backend/models/**/*.onnx
+backend/models/**/*.ckpt
+backend/models/**/*.bin
 
 # Temporary files
 
 *.tmp
 *.temp
+
+# Temporary until completion.
+docs

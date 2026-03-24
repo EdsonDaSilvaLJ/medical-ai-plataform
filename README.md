@@ -6,7 +6,7 @@ The system allows researchers and developers to deploy, manage, and evaluate AI 
 
 ---
 
-## Overview
+## Objective:
 
 Medical AI Platform aims to provide a flexible environment for integrating artificial intelligence into clinical decision support workflows.
 
@@ -22,57 +22,67 @@ This project is intended for experimentation, research, and development of intel
 
 ---
 
-## Architecture
+## Backend Quick Start
 
-The system is divided into three main components:
+### 1. Install dependencies
 
-### 1. Backend
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
-Responsible for:
+### 2. Add model weights
 
-- API endpoints
-- authentication and user management
-- model management
-- inference requests
-- data processing
+Place a Keras/TensorFlow `.h5` model file at:
 
-Possible technologies:
+- `backend/models/model.h5`
 
-- Python
-- Django / Django REST Framework
-- PostgreSQL
-- Celery / Redis 
+Implement the training architecture in:
 
----
+- `backend/models/model_architecture.py` (`build_model` function)
 
-### 2. AI Models
+### 3. Run API
 
-Contains the machine learning models used for diagnostic prediction.
+```bash
+uvicorn backend.main:app --reload
+```
 
-Examples:
+### 4. Open frontend upload page
 
-- computer vision models for medical imaging
-- classification models using clinical attributes
-- deep learning architectures
+Open in browser:
 
-Models may be implemented with:
+- `http://127.0.0.1:8000/`
 
-- PyTorch
-- TensorFlow
-- Scikit-learn
+### 5. Main endpoints
 
----
+- `GET /health` -> backend and model readiness
+- `POST /model/reload` -> reload model weights from disk
+- `POST /predict` -> send image file using `multipart/form-data` key `file`
 
-### 3. Frontend
+Example request:
 
-Provides an interface for:
+```bash
+curl -X POST http://127.0.0.1:8000/predict \
+	-F "file=@/path/to/image.png"
+```
 
-- submitting diagnostic inputs
-- visualizing predictions
-- managing models
-- interacting with the system
+Expected response (example):
 
-Possible technologies:
- 
- - React
- - Next.js
+```json
+{
+	"filename": "image.png",
+	"mask_base64": "<base64_png>",
+	"overlay_base64": "<base64_png>",
+	"mask_mean": 0.23,
+	"mask_coverage": 0.11,
+	"width": 512,
+	"height": 512
+}
+```
+
+### 6. Run tests
+
+```bash
+pytest -q
+```
